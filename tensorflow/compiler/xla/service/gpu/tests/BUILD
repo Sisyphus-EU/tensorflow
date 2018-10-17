@@ -209,3 +209,15 @@ tf_cc_test(
         "//tensorflow/core:test_main",
     ],
 )
+
+tf_cc_test(
+    name = "gpu_atomic_test",
+    srcs = ["gpu_atomic_test.cc"],
+    tags = tf_cuda_tests_tags(),
+    deps = [
+        ":gpu_codegen_test",
+        "//tensorflow/compiler/xla/tests:filecheck",
+        "//tensorflow/core:test",
+        "//tensorflow/core:test_main",
+    ],
+)

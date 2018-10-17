@@ -39,6 +39,16 @@ upper_tabs:
       - title: TensorFlow Lite for Raspberry Pi
         path: /lite/rpi
 
+      - heading: TF Lite converter
+      - title: Overview
+        path: /lite/convert/
+      - title: Python API guide
+        path: /lite/convert/python_api
+      - title: Command line examples
+        path: /lite/convert/cmdline_examples
+      - title: Command line reference
+        path: /lite/convert/cmdline_reference
+
       - title: TF Mobile
         style: accordion
         status: deprecated
@@ -57,6 +67,7 @@ upper_tabs:
           path: /lite/tfmobile/optimizing
 
     - name: API
+      skip_translation: true
       contents:
       - title: API
         path: /api_docs/python/tf/contrib/lite

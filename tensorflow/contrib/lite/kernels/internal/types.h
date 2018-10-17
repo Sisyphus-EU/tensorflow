@@ -15,10 +15,9 @@ limitations under the License.
 #ifndef TENSORFLOW_CONTRIB_LITE_KERNELS_INTERNAL_TYPES_H_
 #define TENSORFLOW_CONTRIB_LITE_KERNELS_INTERNAL_TYPES_H_
 
+#include <algorithm>
 #include <cstring>
-#include <iterator>
 
-#include "absl/base/macros.h"
 #include "tensorflow/contrib/lite/kernels/internal/compatibility.h"
 
 namespace tflite {
@@ -108,6 +107,11 @@ struct QuantizationParams {
   double scale = 0.0;
 };
 
+inline bool operator==(const QuantizationParams& qp1,
+                       const QuantizationParams& qp2) {
+  return qp1.zero_point == qp2.zero_point && qp1.scale == qp2.scale;
+}
+
 template <int N>
 struct Dims {
   int sizes[N];
@@ -126,7 +130,11 @@ class RuntimeShape {
 
   explicit RuntimeShape(int dimensions_count) : size_(dimensions_count) {
     if (dimensions_count > kMaxSmallSize) {
+#ifdef TF_LITE_STATIC_MEMORY
+      TFLITE_CHECK(false && "No shape resizing supported on this platform");
+#else   // TF_LITE_STATIC_MEMORY
       dims_pointer_ = new int32[dimensions_count];
+#endif  // TF_LITE_STATIC_MEMORY
     }
   }
 
@@ -161,7 +169,11 @@ class RuntimeShape {
 
   ~RuntimeShape() {
     if (size_ > kMaxSmallSize) {
+#ifdef TF_LITE_STATIC_MEMORY
+      TFLITE_CHECK(false && "No shape resizing supported on this platform");
+#else   // TF_LITE_STATIC_MEMORY
       delete[] dims_pointer_;
+#endif  // TF_LITE_STATIC_MEMORY
     }
   }
 
@@ -192,11 +204,19 @@ class RuntimeShape {
 
   inline void Resize(int dimensions_count) {
     if (size_ > kMaxSmallSize) {
+#ifdef TF_LITE_STATIC_MEMORY
+      TFLITE_CHECK(false && "No shape resizing supported on this platform");
+#else   // TF_LITE_STATIC_MEMORY
       delete[] dims_pointer_;
+#endif  // TF_LITE_STATIC_MEMORY
     }
     size_ = dimensions_count;
     if (dimensions_count > kMaxSmallSize) {
+#ifdef TF_LITE_STATIC_MEMORY
+      TFLITE_CHECK(false && "No shape resizing supported on this platform");
+#else   // TF_LITE_STATIC_MEMORY
       dims_pointer_ = new int32[dimensions_count];
+#endif  // TF_LITE_STATIC_MEMORY
     }
   }
 
@@ -253,8 +273,9 @@ class RuntimeShape {
   // This creates a shape padded to the desired size with the specified value.
   RuntimeShape(int new_shape_size, const RuntimeShape& shape, int pad_value)
       : size_(0) {
+    // If the following check fails, it is likely because a 4D-only kernel is
+    // being used with an array of larger dimension count.
     TFLITE_CHECK_GE(new_shape_size, shape.DimensionsCount());
-    TFLITE_CHECK_LE(new_shape_size, kMaxSmallSize);
     Resize(new_shape_size);
     const int size_increase = new_shape_size - shape.DimensionsCount();
     for (int i = 0; i < size_increase; ++i) {
@@ -425,7 +446,7 @@ inline int FlatSize(const Dims<N>& dims) {
   return flat_size;
 }
 
-ABSL_DEPRECATED("Prefer FlatSize.")
+TFLITE_DEPRECATED("Prefer FlatSize.")
 inline int RequiredBufferSizeForDims(const Dims<4>& dims) {
   return FlatSize(dims);
 }
@@ -859,6 +880,15 @@ struct MeanParams {
   int16 axis[4];
 };
 
+struct PackParams {
+  int8 axis;
+  const int32* input_zeropoint;
+  const float* input_scale;
+  uint16 inputs_count;
+  int32 output_zeropoint;
+  float output_scale;
+};
+
 struct PadParams {
   int8 left_padding_count;
   int32 left_padding[4];
@@ -957,6 +987,11 @@ struct TanhParams {
 struct TransposeParams {
   int8 perm_count;
   int32 perm[4];
+};
+
+struct UnpackParams {
+  uint16 num_split;
+  int16 axis;
 };
 
 template <typename P>

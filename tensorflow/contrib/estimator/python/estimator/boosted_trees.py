@@ -34,18 +34,19 @@ def _validate_input_fn_and_repeat_dataset(train_input_fn):
   return _input_fn
 
 
-# pylint: disable=protected-access
 def _is_classification_head(head):
   """Infers if the head is a classification head."""
   # Check using all classification heads defined in canned/head.py. However, it
   # is not a complete list - it does not check for other classification heads
   # not defined in the head library.
+  # pylint: disable=protected-access
   return isinstance(head,
                     (head_lib._BinaryLogisticHeadWithSigmoidCrossEntropyLoss,
                      head_lib._MultiClassHeadWithSoftmaxCrossEntropyLoss))
+  # pylint: enable=protected-access
 
 
-class _BoostedTreesEstimator(canned_boosted_trees._BoostedTreesBase):
+class _BoostedTreesEstimator(canned_boosted_trees._BoostedTreesBase):  # pylint: disable=protected-access
   """An Estimator for Tensorflow Boosted Trees models."""
 
   def __init__(self,
@@ -74,7 +75,7 @@ class _BoostedTreesEstimator(canned_boosted_trees._BoostedTreesBase):
         layer.
       head: the `Head` instance defined for Estimator.
       model_dir: Directory to save model parameters, graph and etc. This can
-        also be used to load checkpoints from the directory into a estimator
+        also be used to load checkpoints from the directory into an estimator
         to continue training a previously saved model.
       weight_column: A string or a `_NumericColumn` created by
         `tf.feature_column.numeric_column` defining feature column representing
@@ -113,6 +114,7 @@ class _BoostedTreesEstimator(canned_boosted_trees._BoostedTreesBase):
          are requested.
     """
     # HParams for the model.
+    # pylint: disable=protected-access
     tree_hparams = canned_boosted_trees._TreeHParams(
         n_trees, max_depth, learning_rate, l1_regularization, l2_regularization,
         tree_complexity, min_node_weight, center_bias, pruning_mode)
@@ -197,7 +199,7 @@ def boosted_trees_classifier_train_in_memory(
       the model. All items in the set should be instances of classes derived
       from `FeatureColumn`.
     model_dir: Directory to save model parameters, graph and etc. This can
-      also be used to load checkpoints from the directory into a estimator
+      also be used to load checkpoints from the directory into an estimator
       to continue training a previously saved model.
     n_classes: number of label classes. Default is binary classification.
       Multiclass support is not yet implemented.
@@ -343,7 +345,7 @@ def boosted_trees_regressor_train_in_memory(
       the model. All items in the set should be instances of classes derived
       from `FeatureColumn`.
     model_dir: Directory to save model parameters, graph and etc. This can
-      also be used to load checkpoints from the directory into a estimator
+      also be used to load checkpoints from the directory into an estimator
       to continue training a previously saved model.
     label_dimension: Number of regression targets per example.
       Multi-dimensional support is not yet implemented.
